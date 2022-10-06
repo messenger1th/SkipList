@@ -91,14 +91,15 @@ public:
     void insert(const K&, const V&);
     size_t size() const;
     void print_list() const ;
+    void print_level_size() const ;
 
 
 private:
     node_ptr<K, V> search_ptr(const K&) const;
 
-    std::vector<node_ptr<K, V>> get_previous_ptr(const K& k, size_t level);
+    std::vector<node_ptr<K, V>> get_previous_ptr(const K& k);
 
-    size_t  get_random_level() const{ return rand() % this->max_level_ + 1; }
+    size_t  get_random_level();
 
     size_t max_level_;
 //    size_t current_level_;
@@ -139,10 +140,10 @@ node_ptr<K, V> SkipList<K, V>::search_ptr(const K &k) const {
 }
 
 template<typename K, typename V>
-std::vector<node_ptr<K, V>> SkipList<K, V>::get_previous_ptr(const K &k, size_t level) {
-    std::vector<node_ptr<K, V>> prev(level, this->head_);
+std::vector<node_ptr<K, V>> SkipList<K, V>::get_previous_ptr(const K &k) {
+    std::vector<node_ptr<K, V>> prev(this->max_level_, this->head_);
     node_ptr<K, V> curr = this->head_;
-    for (ssize_t i = level - 1; i >= 0; --i) {
+    for (ssize_t i = this->max_level_ - 1; i >= 0; --i) {
         while (curr->forward_[i] != nullptr && curr->forward_[i]->key_ < k) {
             curr = curr->forward_[i];
         }
@@ -173,11 +174,12 @@ void SkipList<K, V>::print_list() const {
 template<typename K, typename V>
 void SkipList<K, V>::insert(const K &k, const V &v) {
     node_ptr<K, V> node = create_node(k, v, get_random_level());
-    auto previous_ptrs = get_previous_ptr(k, node->get_level());
+    auto previous_ptrs = get_previous_ptr(k);
     for (ssize_t i = node->get_level() - 1; i >= 0; --i) {
         node->forward_[i] = previous_ptrs[i]->forward_[i];
         previous_ptrs[i]->forward_[i] = node;
     }
+
     ++element_count_;
 }
 
@@ -189,7 +191,7 @@ size_t SkipList<K, V>::size() const {
 
 template<typename K, typename V>
 node_ptr<K, V> SkipList<K, V>::erase(const K& k) {
-    auto update = get_previous_ptr(k, this->max_level_);
+    auto update = get_previous_ptr(k);
 
     /* not found key */
     if (update[0]->forward_[0] == nullptr || update[0]->forward_[0]->key_ != k) {
@@ -218,6 +220,28 @@ template<typename K, typename V>
 std::vector<node_ptr<K, V>> SkipList<K, V>::erase_range(const K &lower, const K &upper) {
     //TODO: erase_range
     return {};
+}
+
+template<typename K, typename V>
+size_t SkipList<K, V>::get_random_level() {
+    int k = 1;
+    while (rand() % 2) {
+        k++;
+    }
+    k = (k < max_level_) ? k : max_level_;
+    return k;
+}
+template<typename  K, typename V>
+void SkipList<K, V>::print_level_size() const {
+    for (ssize_t i = this->max_level_ - 1; i >= 0; --i) {
+        int level_size = 0;
+        auto p = head_;
+        while (p->forward_[i] != nullptr) {
+            ++level_size;
+            p = p->forward_[i];
+        }
+        printf("Level %d: size-%d\n", i, level_size);
+    }
 }
 
 #endif //SKIPLIST_SKIPLIST_H

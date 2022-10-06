@@ -3,21 +3,25 @@
 #include <climits>
 #include <cassert>
 #include <unordered_map>
+#include <chrono>
 
 using namespace std;
 
-bool test1(size_t tree_height = 30, int element_count = 10000) {
+bool test1(size_t tree_height = 10, int element_count = 100000) {
     SkipList<int, int> list(tree_height);
+    auto start = std::chrono::high_resolution_clock::now();
+
     for (int i = 0; i < element_count; ++i) {
         list.insert(i, i);
         assert(list.size() == i + 1);
     }
-
     for (int i = 0; i < element_count; ++i) {
         list.erase(i);
         assert(list.size() == element_count - i - 1);
     }
-    cout << "Pass Test1 : single element insert and erase consequently" << endl;
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed = end - start;
+    cout << "Pass Test1 : single element insert and erase consequently, elapsed :" << elapsed.count() << endl;
     return true;
 }
 
@@ -78,7 +82,9 @@ bool test5(size_t tree_height = 30, int element_count = 10000) {
 }
 
 
+
 bool do_test() {
+    srand(time(NULL));
     /* test for insert & erase*/
     test1();
     test2();
