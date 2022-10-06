@@ -6,9 +6,11 @@
 #ifndef SKIPLIST_SKIPLIST_H
 #define SKIPLIST_SKIPLIST_H
 
-
 #include <memory>
 #include <vector>
+#include <mutex>
+#include <shared_mutex>
+#include <atomic>
 
 using std::cout;
 using std::endl;
@@ -112,9 +114,12 @@ private:
     size_t max_level_;
 //    size_t current_level_;
     //TODO: optimize it by using current level.
-    size_t element_count_;
+    std::atomic<size_t> element_count_;
 
     node_ptr<K, V> head_;
+
+    /* concurrency support */
+    mutable std::shared_mutex m;
 };
 template<typename K, typename V>
 node_ptr<K, V> SkipList<K, V>::create_node(const K &k, const V &v, size_t level) {
@@ -135,6 +140,7 @@ SkipList<K, V>::SkipList(size_t level): max_level_(level), element_count_(0) {
 
 template<typename K, typename V>
 node_ptr<K, V> SkipList<K, V>::search_ptr(const K &k) const {
+    std::shared_lock<std::shared_mutex> sharedLock(m);
     node_ptr<K, V> prev = this->head_;
     for (ssize_t i = this->max_level_ - 1; i >= 0; --i) {
         while (prev->forward_[i] != nullptr && prev->forward_[i]->key_ < k) {
@@ -149,6 +155,7 @@ node_ptr<K, V> SkipList<K, V>::search_ptr(const K &k) const {
 
 template<typename K, typename V>
 std::vector<node_ptr<K, V>> SkipList<K, V>::get_previous_ptr(const K &k) {
+
     std::vector<node_ptr<K, V>> prev(this->max_level_, this->head_);
     node_ptr<K, V> curr = this->head_;
     for (ssize_t i = this->max_level_ - 1; i >= 0; --i) {
@@ -158,6 +165,7 @@ std::vector<node_ptr<K, V>> SkipList<K, V>::get_previous_ptr(const K &k) {
         prev[i] = curr;
     }
     return prev;
+
 }
 
 template<typename K, typename V>
@@ -168,7 +176,9 @@ bool SkipList<K, V>::search(const K &k) const {
 
 template<typename K, typename V>
 void SkipList<K, V>::print_list() const {
-     for (ssize_t i = this->max_level_ - 1; i >= 0; --i) {
+    /* Read lock */
+    std::shared_lock<std::shared_mutex> sharedLock(m);
+    for (ssize_t i = this->max_level_ - 1; i >= 0; --i) {
          printf("Level %d : ", i);
          auto p = this->head_->forward_[i];
          while (p != nullptr) {
@@ -181,6 +191,8 @@ void SkipList<K, V>::print_list() const {
 
 template<typename K, typename V>
 void SkipList<K, V>::insert(const K &k, const V &v) {
+    std::unique_lock<std::shared_mutex> uniqueLock(m);
+
     node_ptr<K, V> node = create_node(k, v, get_random_level());
     auto previous_ptrs = get_previous_ptr(k);
     for (ssize_t i = node->get_level() - 1; i >= 0; --i) {
@@ -198,6 +210,7 @@ size_t SkipList<K, V>::size() const {
 
 template<typename K, typename V>
 node_ptr<K, V> SkipList<K, V>::erase(const K& k) {
+    std::unique_lock<std::shared_mutex> uniqueLock(m);
     auto update = get_previous_ptr(k);
 
     /* not found key */
@@ -219,6 +232,7 @@ node_ptr<K, V> SkipList<K, V>::erase(const K& k) {
 
 template<typename K, typename V>
 std::vector<node_ptr<K, V>> SkipList<K, V>::erase_all(const K& k) {
+    std::unique_lock<std::shared_mutex> uniqueLock(m);
     auto previous_ptr = get_previous_ptr(k);
     /* not found element*/
     if (previous_ptr[0]->forward_[0] == nullptr || previous_ptr[0]->forward_[0]->key_ != k) {
@@ -251,7 +265,9 @@ std::vector<node_ptr<K, V>> SkipList<K, V>::erase_all(const K& k) {
 
 template<typename K, typename V>
 std::vector<node_ptr<K, V>> SkipList<K, V>::erase_range(const K &lower, const K &upper) {
+    std::unique_lock<std::shared_mutex> uniqueLock(m);
     auto previous_ptr = get_previous_ptr(lower);
+
     /* not found element*/
     if (previous_ptr[0]->forward_[0] == nullptr || previous_ptr[0]->forward_[0]->key_ >= upper) {
         return {};
@@ -294,6 +310,8 @@ size_t SkipList<K, V>::get_random_level() {
 
 template<typename  K, typename V>
 void SkipList<K, V>::print_level_size() const {
+    /* Read lock */
+    std::shared_lock<std::shared_mutex> sharedLock(m);
     for (ssize_t i = this->max_level_ - 1; i >= 0; --i) {
         int level_size = 0;
         auto p = head_;

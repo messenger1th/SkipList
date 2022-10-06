@@ -4,7 +4,8 @@
 #include <cassert>
 #include <unordered_map>
 #include <chrono>
-
+#include <thread>
+#include <algorithm>
 using namespace std;
 
 bool test1(size_t list_height = 10, int element_count = 100000) {
@@ -19,6 +20,7 @@ bool test1(size_t list_height = 10, int element_count = 100000) {
         list.erase(i);
         assert(list.size() == element_count - i - 1);
     }
+
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed = end - start;
     cout << "Pass Test1 : single element insert and erase consequently, elapsed :" << elapsed.count() << endl;
@@ -108,21 +110,95 @@ bool test_erase_range(size_t list_height = 15, size_t element_count = 10000) {
     return true;
 }
 
-bool do_test() {
-    srand(time(NULL));
-    /* test for insert & erase*/
-    test1();
-    test2();
-    test3();
-    test4();
-    test5();
-
-    /* test for erase_all() & erase_range() */
-    test_erase_all();
-    test_erase_range();
-    return true;
+void insert_task(SkipList<int, int>& skipList, size_t patch_size, size_t base) {
+    for (int i = base; i < patch_size + base; ++i) {
+        skipList.insert(i, i);
+    }
+}
+void search_task(SkipList<int, int>& skipList, size_t patch_size, size_t base) {
+    for (int i = base; i < patch_size + base; ++i) {
+        assert(skipList.search(i));
+    }
+}
+void erase_task(SkipList<int, int>& skipList, size_t patch_size, size_t base) {
+    for (int i = base; i < patch_size + base; ++i) {
+        skipList.erase(i);
+    }
 }
 
+
+bool test_multi_thread( size_t thread_count = std::thread::hardware_concurrency(), size_t list_height = 15, size_t element_count = 1000000) {
+    SkipList<int, int> skipList(list_height);
+
+    /*thread information */
+    auto every_thread_size = element_count / thread_count;
+    auto total_size = every_thread_size * thread_count;
+
+    /* insert 0->element count to skip list */
+    vector<thread> insert_threads; insert_threads.reserve(thread_count);
+    auto start = std::chrono::high_resolution_clock::now();
+    for (size_t i = 0; i < thread_count; ++i) {
+        insert_threads.emplace_back(insert_task, std::ref(skipList), every_thread_size, i * every_thread_size);
+    }
+    for_each(insert_threads.begin(), insert_threads.end(), [] (auto& t) {
+        t.join();
+    });
+    auto end = std::chrono::high_resolution_clock::now();
+
+    std::chrono::duration<double> insert_duration = end - start;
+    assert(skipList.size() == total_size);
+
+
+    /* search 0->element count to skip list */
+    vector<thread> search_treads; search_treads.reserve(thread_count);
+    start = std::chrono::high_resolution_clock::now();
+    for (size_t i = 0; i < thread_count; ++i) {
+        search_treads.emplace_back(search_task, std::ref(skipList), every_thread_size, i * every_thread_size);
+    }
+    for_each(search_treads.begin(), search_treads.end(), [] (auto& t) {
+        t.join();
+    });
+    end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> search_duration = end - start;
+    assert(skipList.size() == total_size);
+
+    /* erase 0->element count to skip list */
+    vector<thread> erase_threads; erase_threads.reserve(thread_count);
+    start = std::chrono::high_resolution_clock::now();
+    for (size_t i = 0; i < thread_count; ++i) {
+        erase_threads.emplace_back(erase_task, std::ref(skipList), every_thread_size, i * every_thread_size);
+    }
+    for_each(erase_threads.begin(), erase_threads.end(), [] (auto& t) {
+        t.join();
+    });
+    end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> erase_duration = end - start;
+    assert(skipList.size() == 0);
+
+    cout << "Pass Test multi-task " << endl;
+    cout << "insert duration: " << insert_duration.count() << endl;
+    cout << "search duration: " << search_duration.count() << endl;
+    cout << "erase  duration: " << erase_duration.count() << endl;
+}
+
+bool do_test() {
+    srand(time(NULL));
+
+    /* test for insert & erase*/
+//    test1();
+//    test2();
+//    test3();
+//    test4();
+//    test5();
+
+    /* test for erase_all() & erase_range() */
+//    test_erase_all();
+//    test_erase_range();
+
+    /* do concurrency test */
+    test_multi_thread();
+    return true;
+}
 
 int main() {
     do_test();
