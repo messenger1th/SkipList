@@ -7,8 +7,8 @@
 
 using namespace std;
 
-bool test1(size_t tree_height = 10, int element_count = 100000) {
-    SkipList<int, int> list(tree_height);
+bool test1(size_t list_height = 10, int element_count = 100000) {
+    SkipList<int, int> list(list_height);
     auto start = std::chrono::high_resolution_clock::now();
 
     for (int i = 0; i < element_count; ++i) {
@@ -25,8 +25,8 @@ bool test1(size_t tree_height = 10, int element_count = 100000) {
     return true;
 }
 
-bool test2(size_t tree_height = 30, int element_count = 10000) {
-    SkipList<int, int> list(30);
+bool test2(size_t list_height = 30, int element_count = 10000) {
+    SkipList<int, int> list(list_height);
     for (int i = 0; i < element_count; ++i) {
         list.insert(i, i);
         list.erase(i);
@@ -36,8 +36,8 @@ bool test2(size_t tree_height = 30, int element_count = 10000) {
     return true;
 }
 
-bool test3(size_t tree_height = 30, int element_count = 10000) {
-    SkipList<int, int> list(30);
+bool test3(size_t list_height = 30, int element_count = 10000) {
+    SkipList<int, int> list(list_height);
     for (int i = 0; i < element_count; ++i) {
         list.insert(i, i);
         list.insert(i, i);
@@ -49,8 +49,8 @@ bool test3(size_t tree_height = 30, int element_count = 10000) {
 }
 
 
-bool test4(size_t tree_height = 30, int element_count = 10000) {
-    SkipList<int, int> list(30);
+bool test4(size_t list_height = 30, int element_count = 10000) {
+    SkipList<int, int> list(list_height);
     for (int i = 0; i < element_count; ++i) {
         list.erase(i);
         list.insert(i, i);
@@ -60,8 +60,8 @@ bool test4(size_t tree_height = 30, int element_count = 10000) {
     cout << "Pass Test4 : erase element non in list but insert it twice" << endl;
     return true;
 }
-bool test5(size_t tree_height = 30, int element_count = 10000) {
-    SkipList<int, int> list(30);
+bool test5(size_t list_height = 30, int element_count = 10000) {
+    SkipList<int, int> list(list_height);
     unordered_map<int, int> frequency;
     int element_total_frequency = 0;
     for (int i = 0; i < element_count; ++i) {
@@ -81,7 +81,32 @@ bool test5(size_t tree_height = 30, int element_count = 10000) {
     return true;
 }
 
+bool test_erase_all(size_t list_height = 15, size_t element_count = 10000) {
+    SkipList<int, int> list(list_height);
+    for (int i = 0; i < element_count; ++i) {
+        list.insert(i, i);
+    }
+    for (int i = 0; i < element_count; ++i) {
+        list.erase_all(i);
+    }
+    cout << "Pass Test erase_all()" << endl;
+    return true;
+}
 
+bool test_erase_range(size_t list_height = 15, size_t element_count = 10000) {
+    int lower = 0, upper = element_count;
+    SkipList<int, int> list(list_height);
+
+    for (int i = 0; i < element_count; ++i) {
+        list.insert(i, i);
+    }
+    list.erase_range(lower, element_count / 2);
+    assert(list.size() == element_count / 2);
+    list.erase_range(lower, upper);
+    assert(list.size() == 0);
+    cout << "Pass Test erase_range()" << endl;
+    return true;
+}
 
 bool do_test() {
     srand(time(NULL));
@@ -92,7 +117,9 @@ bool do_test() {
     test4();
     test5();
 
-    //TODO: test for erase_all() & erase_range();
+    /* test for erase_all() & erase_range() */
+    test_erase_all();
+    test_erase_range();
     return true;
 }
 

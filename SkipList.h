@@ -49,6 +49,8 @@ private:
     const K key_;
     V value_;
     std::vector<node_ptr> forward_;
+
+    void unlink();
 };
 
 template<typename K, typename V>
@@ -72,6 +74,12 @@ size_t Node<K, V>::get_level() const {
 }
 
 
+template<typename K, typename V>
+void Node<K, V>::unlink() {
+    for (auto &p:forward_) {
+        p = nullptr;
+    }
+}
 /*
  * Skip list
  */
@@ -179,7 +187,6 @@ void SkipList<K, V>::insert(const K &k, const V &v) {
         node->forward_[i] = previous_ptrs[i]->forward_[i];
         previous_ptrs[i]->forward_[i] = node;
     }
-
     ++element_count_;
 }
 
@@ -212,25 +219,79 @@ node_ptr<K, V> SkipList<K, V>::erase(const K& k) {
 
 template<typename K, typename V>
 std::vector<node_ptr<K, V>> SkipList<K, V>::erase_all(const K& k) {
-    //TODO: erase_all
-    return {};
+    auto previous_ptr = get_previous_ptr(k);
+    /* not found element*/
+    if (previous_ptr[0]->forward_[0] == nullptr || previous_ptr[0]->forward_[0]->key_ != k) {
+        return {};
+    }
+
+    /*create vector for erase ptr*/
+    std::vector<node_ptr<K, V>> erase_ptrs;
+    auto prev = previous_ptr[0];
+    while (prev->forward_[0] != nullptr && prev->forward_[0]->key_ == k) {
+        erase_ptrs.emplace_back(prev->forward_[0]);
+        prev = prev->forward_[0];
+    }
+    for (ssize_t i = 0; i < this->max_level_; ++i) {
+        if (previous_ptr[i]->forward_[i] == nullptr || previous_ptr[i]->forward_[i]->key_ != k) {
+            break;
+        }
+
+        auto prev = previous_ptr[i];
+        auto end = prev->forward_[i];
+        while (end != nullptr && end->key_ == k) {
+            end = end->forward_[i];
+        }
+        prev->forward_[i] = end;
+    }
+    this->element_count_ -= erase_ptrs.size();
+    erase_ptrs.back()->unlink();
+    return erase_ptrs;
 }
 
 template<typename K, typename V>
 std::vector<node_ptr<K, V>> SkipList<K, V>::erase_range(const K &lower, const K &upper) {
-    //TODO: erase_range
-    return {};
+    auto previous_ptr = get_previous_ptr(lower);
+    /* not found element*/
+    if (previous_ptr[0]->forward_[0] == nullptr || previous_ptr[0]->forward_[0]->key_ >= upper) {
+        return {};
+    }
+
+    /*create vector for erase ptr*/
+    std::vector<node_ptr<K, V>> erase_ptrs;
+    auto prev = previous_ptr[0];
+    while (prev->forward_[0] != nullptr && prev->forward_[0]->key_ < upper) {
+        erase_ptrs.emplace_back(prev->forward_[0]);
+        prev = prev->forward_[0];
+    }
+    for (ssize_t i = 0; i < this->max_level_; ++i) {
+        if (previous_ptr[i]->forward_[i] == nullptr || previous_ptr[i]->forward_[i]->key_ >= upper) {
+            break;
+        }
+
+        auto prev = previous_ptr[i];
+        auto end = prev->forward_[i];
+        while (end != nullptr && end->key_ < upper) {
+            end = end->forward_[i];
+        }
+        prev->forward_[i] = end;
+    }
+    this->element_count_ -= erase_ptrs.size();
+    erase_ptrs.back()->unlink();
+    return erase_ptrs;
 }
+
 
 template<typename K, typename V>
 size_t SkipList<K, V>::get_random_level() {
-    int k = 1;
+    size_t k = 1;
     while (rand() % 2) {
         k++;
     }
-    k = (k < max_level_) ? k : max_level_;
-    return k;
+    return std::min(k, this->max_level_);
 }
+
+
 template<typename  K, typename V>
 void SkipList<K, V>::print_level_size() const {
     for (ssize_t i = this->max_level_ - 1; i >= 0; --i) {
