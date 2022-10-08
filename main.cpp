@@ -8,27 +8,26 @@
 #include <algorithm>
 using namespace std;
 
-bool test1(size_t list_height = 10, int element_count = 100000) {
-    SkipList<int, int> list(list_height);
+bool test1(size_t list_level = 20, int element_count = 1000000) {
+    SkipList<int, int> list(list_level);
     auto start = std::chrono::high_resolution_clock::now();
 
     for (int i = 0; i < element_count; ++i) {
         list.insert(i, i);
-        assert(list.size() == i + 1);
+//        assert(list.size() == i + 1);
     }
     for (int i = 0; i < element_count; ++i) {
         list.erase(i);
         assert(list.size() == element_count - i - 1);
     }
-
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed = end - start;
     cout << "Pass Test1 : single element insert and erase consequently, elapsed :" << elapsed.count() << endl;
     return true;
 }
 
-bool test2(size_t list_height = 30, int element_count = 10000) {
-    SkipList<int, int> list(list_height);
+bool test2(size_t list_level = 30, int element_count = 10000) {
+    SkipList<int, int> list(list_level);
     for (int i = 0; i < element_count; ++i) {
         list.insert(i, i);
         list.erase(i);
@@ -38,8 +37,8 @@ bool test2(size_t list_height = 30, int element_count = 10000) {
     return true;
 }
 
-bool test3(size_t list_height = 30, int element_count = 10000) {
-    SkipList<int, int> list(list_height);
+bool test3(size_t list_level = 30, int element_count = 10000) {
+    SkipList<int, int> list(list_level);
     for (int i = 0; i < element_count; ++i) {
         list.insert(i, i);
         list.insert(i, i);
@@ -51,8 +50,8 @@ bool test3(size_t list_height = 30, int element_count = 10000) {
 }
 
 
-bool test4(size_t list_height = 30, int element_count = 10000) {
-    SkipList<int, int> list(list_height);
+bool test4(size_t list_level = 30, int element_count = 10000) {
+    SkipList<int, int> list(list_level);
     for (int i = 0; i < element_count; ++i) {
         list.erase(i);
         list.insert(i, i);
@@ -62,8 +61,8 @@ bool test4(size_t list_height = 30, int element_count = 10000) {
     cout << "Pass Test4 : erase element non in list but insert it twice" << endl;
     return true;
 }
-bool test5(size_t list_height = 30, int element_count = 10000) {
-    SkipList<int, int> list(list_height);
+bool test5(size_t list_level = 30, int element_count = 10000) {
+    SkipList<int, int> list(list_level);
     unordered_map<int, int> frequency;
     int element_total_frequency = 0;
     for (int i = 0; i < element_count; ++i) {
@@ -83,8 +82,8 @@ bool test5(size_t list_height = 30, int element_count = 10000) {
     return true;
 }
 
-bool test_erase_all(size_t list_height = 15, size_t element_count = 10000) {
-    SkipList<int, int> list(list_height);
+bool test_erase_all(size_t list_level = 15, size_t element_count = 10000) {
+    SkipList<int, int> list(list_level);
     for (int i = 0; i < element_count; ++i) {
         list.insert(i, i);
     }
@@ -95,9 +94,9 @@ bool test_erase_all(size_t list_height = 15, size_t element_count = 10000) {
     return true;
 }
 
-bool test_erase_range(size_t list_height = 15, size_t element_count = 10000) {
+bool test_erase_range(size_t list_level = 15, size_t element_count = 10000) {
     int lower = 0, upper = element_count;
-    SkipList<int, int> list(list_height);
+    SkipList<int, int> list(list_level);
 
     for (int i = 0; i < element_count; ++i) {
         list.insert(i, i);
@@ -126,9 +125,27 @@ void erase_task(SkipList<int, int>& skipList, size_t patch_size, size_t base) {
     }
 }
 
+bool test6(size_t list_level = 20, int element_count = 10000) {
+    SkipList<int, int> list(list_level);
 
-bool test_multi_thread( size_t thread_count = std::thread::hardware_concurrency(), size_t list_height = 15, size_t element_count = 1000000) {
-    SkipList<int, int> skipList(list_height);
+    for (int i = 0; i < element_count; ++i) {
+        list.insert(i, i);
+        assert(list.size() == i + 1);
+    }
+
+
+    auto start = std::chrono::high_resolution_clock::now();
+    for (int i = 0; i < element_count; ++i) {
+        list.erase(i);
+    }
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed = end - start;
+    cout << "Pass Test6 : insert data & check search " << elapsed.count() << endl;
+    return true;
+}
+
+bool test_multi_thread( size_t thread_count = std::thread::hardware_concurrency(), size_t list_level = 20, size_t element_count = 1000000) {
+    SkipList<int, int> skipList(list_level);
 
     /*thread information */
     auto every_thread_size = element_count / thread_count;
@@ -190,13 +207,13 @@ bool do_test() {
 //    test3();
 //    test4();
 //    test5();
-
+//    test6();
     /* test for erase_all() & erase_range() */
 //    test_erase_all();
 //    test_erase_range();
 
     /* do concurrency test */
-    test_multi_thread();
+//    test_multi_thread();
     return true;
 }
 

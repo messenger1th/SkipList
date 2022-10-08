@@ -26,10 +26,11 @@
 
 **Feature**
 
-1. Template for any type of Key & Value
+1. Template for any type of Key & Value 
 2. support same value insertion
 3. support single key erase and erase_all key
 4. support range erase
+5. use `shared_ptr` for resource manage. 
 
 
 
@@ -37,15 +38,44 @@
 
 **Feature**
 
-1. use `shared_mutex` (Since C++17) support for multi thread read & write.
+1.  Use `shared_mutex` (Since C++17) support for multi thread read & write.
+1.  Portable thread for operating System.
 
 
 
 ## Performance
 
+### Single Thread 
+
+Parameters: 
+
+* Skip List Level : 20
 
 
-## Updating
+| Operation \ Data Size(k) |    10     |   100    |  1000   |
+| :----------------------: | :-------: | :------: | :-----: |
+|          insert          | 0.0198597 | 0.188613 | 1.98124 |
+|          search          | 0.0105348 | 0.189374 | 1.21571 |
+|          erase           | 0.0123729 | 0.164983 | 1.26743 |
+
+
+
+### Multi-Thread
+
+Parameters: 
+
+* Skip List Level : 20
+* Worker Thread Count : 8
+
+| Operation \ Data Size(k) |     10     |    100    |   1000   |
+| :----------------------: | :--------: | :-------: | :------: |
+|          insert          | 0.0318995  | 0.417403  | 3.57796  |
+|          search          | 0.00314293 | 0.0659986 | 0.371875 |
+|          erase           | 0.0307055  | 0.437583  | 3.48913  |
+
+
+
+## Todo\Wish List
 
 1. Use Thread Pool (Based On C++14) for Unit Test, which is more practicable.
 2. Use More Modern Feature of C++, such as `package_task`, 
