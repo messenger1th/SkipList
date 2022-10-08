@@ -44,7 +44,6 @@
 
 
 ## Performance
-
 ### Single Thread 
 
 Parameters: 
