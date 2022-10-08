@@ -7,7 +7,7 @@
 * `insert(K, V)`
 * `erase(K)`
 * `erase_all(K)`
-* erase_range(Lower, Upper)
+* `erase_range(Lower, Upper)`
 
 **Display**
 
