@@ -39,7 +39,7 @@
 **Feature**
 
 1.  Use `shared_mutex` (Since C++17) support for multi thread read & write.
-1.  Portable thread for operating System.
+2.  Use C++ standard library for cross-platform
 
 
 
