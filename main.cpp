@@ -217,6 +217,7 @@ bool do_test() {
     return true;
 }
 
-int main() {
+int main(int argc, const char** argv) {
+    cout << "Hello Skip List!" << endl;
     do_test();
 }

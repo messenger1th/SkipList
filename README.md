@@ -1,6 +1,10 @@
 # Skip List
 
+## Feature
 
+* use `shared_ptr` for resource manage.
+* use template for extensibility.
+* use `shared_mutex` & `shared_lock`for better read performance.
 
 ## Interface
 
@@ -15,8 +19,6 @@
 * `print_list_level()`
 
 **Other**: Some Getter
-
-
 
 
 
@@ -44,7 +46,7 @@
 
 
 ## Performance
-### Single Thread 
+### Single Thread
 
 Parameters: 
 * Skip List Level : 20
@@ -75,8 +77,16 @@ Parameters:
 
 
 ## Todo\Wish List
+
+**For Better Performance**
+
+1. Use more small granularity lock for better Read & Write performance.
+
+
+
+**For Better Test**
+
 1. Use Thread Pool (Based On C++14) for Unit Test, which is more practicable.
 2. Use More Modern Feature of C++, such as `package_task`, 
-3. Use more small granularity lock for better Read & Write performance.
 4. Use makefile for better extension & compile performance.
 5. Use More systematic test frame for Unit Test: Like Docker ?  
